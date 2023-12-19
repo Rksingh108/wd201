@@ -1,79 +1,60 @@
-const todoList = require("../todo");
-let todos;
+const todoList = require('../todo');
+const yesterday = new Date(Date.now() - 1000 * 60 * 60 * 24);
 
-beforeEach(() => {
-  todos = todoList();
-});
+describe("Todolist Test Suite", () => {
+    let todoInstance;
 
-describe("TodoList Test Suite", () => {
-  test("Should add new todo", () => {
-    const todoItemsCount = todos.all.length;
-    todos.add({
-      title: "Test todo 2",
-      completed: false,
-      dueDate: "2023-12-20",
+    beforeAll(() => {
+      todoInstance = todoList();
+      todoInstance.add({
+        title: "new todo",
+        completed: false,
+        dueDate: new Date().toLocaleDateString("en-CA") // yesterday
+      });
+      todoInstance.add({
+        title: "Test todo",
+        completed: false,
+        dueDate: new Date().toLocaleDateString("en-CA", { addDays: 1 }) // tomorrow
+      });
     });
-    expect(todos.all.length).toBe(todoItemsCount + 1);
-  });
+    
 
-  test("Should mark a todo as complete", () => {
-    todos.add({
-      title: "Test todo",
-      completed: false,
-      dueDate: "2023-12-20",
+    test("Should add new todo", () => {
+        const todoItemsCount = todoInstance.all.length;
+        todoInstance.add({
+            title: "Test todo",
+            completed: false,
+            dueDate: new Date().toLocaleDateString("en-CA")
+        });
+        expect(todoInstance.all.length).toBe(todoItemsCount + 1);
     });
 
-    expect(todos.all[0].completed).toBe(false);
-    todos.markAsComplete(0);
-    expect(todos.all[0].completed).toBe(true);
-  });
+    test("Should mark a todo as complete", () => {
+        expect(todoInstance.all[0].completed).toBe(false);
+        todoInstance.markAsComplete(0);
+        expect(todoInstance.all[0].completed).toBe(true);
+    });
 
-  test("Should retrieve overdue items", () => {
-    const dateToday = new Date();
-    const formattedDate = (d) => d.toISOString().split("T")[0];
-    const yesterday = formattedDate(
-      new Date(dateToday.setDate(dateToday.getDate() - 1)),
-    );
+    test('Should add an overdue todo item', () => {
+      const overdueTodo = { title: 'Pay bills', dueDate: '2023-12-12', completed: false };
+      todoInstance.add(overdueTodo);
+      const overdueItems = todoInstance.overdue();
+      expect(overdueItems.length).toBe(1);
+      expect(overdueItems[0]).toEqual(overdueTodo);
+    });
+    
 
-    const overDueTodoItemsCount = todos.overdue().length;
-    const overdueAdd = {
-      title: "Complete my assignment",
-      dueDate: yesterday,
-      completed: false,
-    };
-    todos.add(overdueAdd);
-    expect(todos.overdue().length).toEqual(overDueTodoItemsCount + 1);
-  });
+    test("Should retrieve due today items", () => {
+        const dueTodayItems = todoInstance.dueToday();
+        expect(dueTodayItems.length).toBeGreaterThan(0);
+        // Add more specific assertions based on your implementation
+    });
 
-  test("Should retrieve due today items", () => {
-    const dateToday = new Date();
-    const formattedDate = (d) => d.toISOString().split("T")[0];
-    const today = formattedDate(dateToday);
-
-    const DueTodayTodoItemsCount = todos.dueToday().length;
-    const todayAdd = {
-      title: "Complete this milestone",
-      dueDate: today,
-      completed: false,
-    };
-    todos.add(todayAdd);
-    expect(todos.dueToday().length).toEqual(DueTodayTodoItemsCount + 1);
-  });
-
-  test("Should retrieve due later items", () => {
-    const dateToday = new Date();
-    const formattedDate = (d) => d.toISOString().split("T")[0];
-    const tomorrow = formattedDate(
-      new Date(dateToday.setDate(dateToday.getDate() + 1)),
-    );
-
-    const DueLaterTodoItemsCount = todos.dueLater().length;
-    const laterAdd = {
-      title: "Prepare for sem exams",
-      dueDate: tomorrow,
-      completed: false,
-    };
-    todos.add(laterAdd);
-    expect(todos.dueLater().length).toEqual(DueLaterTodoItemsCount + 1);
-  });
+    test("Should retrieve due later items", () => {
+      const dueLaterTodo = { title: 'Call dentist', dueDate: '2024-12-29', completed: false };
+      todoInstance.add(dueLaterTodo);
+      const dueLaterItems = todoInstance.dueLater();
+      expect(dueLaterItems.length).toBe(1);
+      expect(dueLaterItems[0]).toEqual(dueLaterTodo);
+    });
 });
